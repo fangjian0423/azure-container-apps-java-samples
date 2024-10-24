@@ -4,14 +4,6 @@
 
 name: Publish SpringBatch Football images
 
-on:
-  workflow_dispatch:
-    inputs:
-      petclinic_repo_url:
-        description: 'The repository url of Spring Petclinic microservices'
-        required: true
-        default: 'https://github.com/spring-petclinic/spring-petclinic-microservices.git'
-
 defaults:
   run:
     shell: bash
