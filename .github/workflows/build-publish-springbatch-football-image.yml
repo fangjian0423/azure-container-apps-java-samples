@@ -4,6 +4,9 @@
 
 name: Publish SpringBatch Football images
 
+on:
+  workflow_dispatch:
+
 defaults:
   run:
     shell: bash
