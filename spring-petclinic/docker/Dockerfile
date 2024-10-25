@@ -1,27 +1,18 @@
-FROM eclipse-temurin:17 as builder
-WORKDIR application
-ARG ARTIFACT_NAME
-COPY ../spring-petclinic/target/${ARTIFACT_NAME}-*.jar application.jar
+FROM mcr.microsoft.com/openjdk/jdk:21-mariner AS build
+WORKDIR /app
+RUN tdnf install -y tar
+COPY ../spring-petclinic/mvnw* /app/
+COPY ../spring-petclinic/.mvn /app/.mvn
+COPY ../spring-petclinic/pom.xml /app
+COPY ../spring-petclinic/src /app/src
+RUN ls -la /app
+RUN chmod +x ./mvnw
+RUN ./mvnw dependency:go-offline -B -Dproduction package
 
-RUN java -Djarmode=layertools -jar application.jar extract
 
+FROM mcr.microsoft.com/openjdk/jdk:21-mariner
+ENV ARTIFACT_NAME=spring-petclinic-*.jar
+COPY --from=build /app/target/${ARTIFACT_NAME} /usr/src/myapp/
 
-FROM eclipse-temurin:17
-WORKDIR application
-
-ARG EXPOSED_PORT
-EXPOSE ${EXPOSED_PORT}
-
-COPY --from=builder application/dependencies/ ./
-
-# fix for https://stackoverflow.com/questions/51115856/docker-failed-to-export-image-failed-to-create-image-failed-to-get-layer
-# (only last copy caused issue)
-# this seems to be triggered by using btrfs:
-# https://github.com/moby/moby/issues/36573
-RUN true
-COPY --from=builder application/spring-boot-loader/ ./
-RUN true
-COPY --from=builder application/snapshot-dependencies/ ./
-RUN true
-COPY --from=builder application/application/ ./
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+EXPOSE 8080
+CMD ["/usr/bin/java", "-jar", "/usr/src/myapp/${ARTIFACT_NAME}"]
