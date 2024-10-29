@@ -18,7 +18,7 @@ defaults:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/javaaccelerator
+  IMAGE_INFIX: ${{ github.repository_owner }}/javaaccelerator
   IMAGE_NAME: spring-batch-football
   TAG_VERSION: ${{ inputs.image_tag_version != '' && inputs.image_tag_version || format('{0}{1}', github.run_id, github.run_attempt) }}
 
@@ -53,7 +53,7 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest
             type=raw,value=${{ env.TAG_VERSION }}
