@@ -11,6 +11,9 @@ on:
         description: 'The repository url of Spring Petclinic microservices'
         required: true
         default: 'https://github.com/spring-petclinic/spring-petclinic-microservices.git'
+      image_version:
+        description: 'The image version of Spring Petclinic microservices'
+        default: '1.0.0'
 
 defaults:
   run:
@@ -62,6 +65,9 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.CUSTOMERS_SERVICE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ inputs.petclinic_repo_url }}
       - name: Build and push customers-service image
         id: push-customers
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -69,9 +75,7 @@ jobs:
           context: spring-petclinic-microservices/
           file: spring-petclinic-microservices/docker/Dockerfile
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.CUSTOMERS_SERVICE }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.CUSTOMERS_SERVICE }}:1.0.0
+          tags: ${{ steps.meta-api.outputs.tags }}
           build-args: ARTIFACT_NAME=${{ env.CUSTOMERS_SERVICE }}
       - name: Extract metadata (tags, labels) for vets-service
         id: meta-vets
