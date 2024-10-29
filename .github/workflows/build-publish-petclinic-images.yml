@@ -11,7 +11,7 @@ on:
         description: 'The repository url of Spring Petclinic microservices'
         default: 'https://github.com/spring-petclinic/spring-petclinic-microservices.git'
       image_tag_version:
-        description: 'The image version of Spring Petclinic microservices, default is the github run id'
+        description: 'The image tag version of Spring Petclinic microservices, default is the github run id + run_attempt'
 
 defaults:
   run:
