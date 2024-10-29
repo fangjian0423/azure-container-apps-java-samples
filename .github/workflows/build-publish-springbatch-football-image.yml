@@ -6,6 +6,10 @@ name: Publish SpringBatch Football images
 
 on:
   workflow_dispatch:
+    inputs:
+      image_tag_version:
+        description: 'The image tag version of Spring batch football, default is the github run id + run_attempt'
+
 
 defaults:
   run:
@@ -14,8 +18,9 @@ defaults:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}
+  IMAGE_INFIX: ${{ github.repository_owner }}/javaaccelerator
   IMAGE_NAME: spring-batch-football
+  TAG_VERSION: ${{ inputs.image_tag_version != '' && inputs.image_tag_version || format('{0}{1}', github.run_id, github.run_attempt) }}
 
 jobs:
   build-and-push-image:
@@ -48,7 +53,10 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push image
         id: push-image
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -57,10 +65,3 @@ jobs:
           file: spring-batch-football/Dockerfile
           push: true
           tags: ${{ steps.meta-image.outputs.tags }}
-      - name: Generate artifact attestation
-        id: attest-image
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.push-image.outputs.digest }}
-          push-to-registry: true

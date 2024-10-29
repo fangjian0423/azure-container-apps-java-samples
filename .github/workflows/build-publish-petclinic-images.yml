@@ -9,8 +9,9 @@ on:
     inputs:
       petclinic_repo_url:
         description: 'The repository url of Spring Petclinic microservices'
-        required: true
         default: 'https://github.com/spring-petclinic/spring-petclinic-microservices.git'
+      image_tag_version:
+        description: 'The image tag version of Spring Petclinic microservices, default is the github run id + run_attempt'
 
 defaults:
   run:
@@ -19,11 +20,12 @@ defaults:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}
+  IMAGE_INFIX: ${{ github.repository_owner }}/javaaccelerator
   CUSTOMERS_SERVICE: spring-petclinic-customers-service
   VETS_SERVICE: spring-petclinic-vets-service
   VISITS_SERVICE: spring-petclinic-visits-service
   API_GATEWAY: spring-petclinic-api-gateway
+  TAG_VERSION: ${{ inputs.image_tag_version != '' && inputs.image_tag_version || format('{0}{1}', github.run_id, github.run_attempt) }}
 
 jobs:
   build-and-push-image:
@@ -61,7 +63,10 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.CUSTOMERS_SERVICE }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.CUSTOMERS_SERVICE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push customers-service image
         id: push-customers
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -71,19 +76,15 @@ jobs:
           push: true
           tags: ${{ steps.meta-customers.outputs.tags }}
           build-args: ARTIFACT_NAME=${{ env.CUSTOMERS_SERVICE }}
-      - name: Generate artifact attestation for customers-service
-        id: attest-customers
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.CUSTOMERS_SERVICE }}
-          subject-digest: ${{ steps.push-customers.outputs.digest }}
-          push-to-registry: true
       - name: Extract metadata (tags, labels) for vets-service
         id: meta-vets
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.VETS_SERVICE }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VETS_SERVICE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push vets-service image
         id: push-vets
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -93,19 +94,15 @@ jobs:
           push: true
           tags: ${{ steps.meta-vets.outputs.tags }}
           build-args: ARTIFACT_NAME=${{ env.VETS_SERVICE }}
-      - name: Generate artifact attestation for vets-service
-        id: attest-vets
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.VETS_SERVICE }}
-          subject-digest: ${{ steps.push-vets.outputs.digest }}
-          push-to-registry: true
       - name: Extract metadata (tags, labels) for visits-service
         id: meta-visits
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.VISITS_SERVICE }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VISITS_SERVICE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push visits-service image
         id: push-visits
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -115,19 +112,15 @@ jobs:
           push: true
           tags: ${{ steps.meta-visits.outputs.tags }}
           build-args: ARTIFACT_NAME=${{ env.VISITS_SERVICE }}
-      - name: Generate artifact attestation for visits-service
-        id: attest-visits
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.VISITS_SERVICE }}
-          subject-digest: ${{ steps.push-visits.outputs.digest }}
-          push-to-registry: true
       - name: Extract metadata (tags, labels) for api-gateway
         id: meta-api
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.API_GATEWAY }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.API_GATEWAY }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push api-gateway image
         id: push-api
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -139,10 +132,3 @@ jobs:
           build-args: |
             ARTIFACT_NAME=${{ env.API_GATEWAY }}    
             EXPOSED_PORT=8080
-      - name: Generate artifact attestation for api-gateway
-        id: attest-api
-        uses: actions/attest-build-provenance@v1
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ env.API_GATEWAY }}
-          subject-digest: ${{ steps.push-api.outputs.digest }}
-          push-to-registry: true
