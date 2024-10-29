@@ -10,9 +10,8 @@ on:
       petclinic_repo_url:
         description: 'The repository url of Spring Petclinic microservices'
         default: 'https://github.com/spring-petclinic/spring-petclinic-microservices.git'
-      image_version:
-        description: 'The image version of Spring Petclinic microservices'
-        default: '1.0.0'
+      image_tag_version:
+        description: 'The image version of Spring Petclinic microservices, default is the github run id'
 
 defaults:
   run:
@@ -26,6 +25,7 @@ env:
   VETS_SERVICE: spring-petclinic-vets-service
   VISITS_SERVICE: spring-petclinic-visits-service
   API_GATEWAY: spring-petclinic-api-gateway
+  TAG_VERSION: ${{ inputs.image_tag_version != '' && inputs.image_tag_version || format('{0}{1}', github.run_id, github.run_attempt) }}
 
 jobs:
   build-and-push-image:
@@ -66,7 +66,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.CUSTOMERS_SERVICE }}
           tags: |
             type=raw,value=latest
-            type=raw,value=${{ inputs.image_version }}
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push customers-service image
         id: push-customers
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -82,6 +82,9 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VETS_SERVICE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push vets-service image
         id: push-vets
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -89,9 +92,7 @@ jobs:
           context: spring-petclinic-microservices/
           file: spring-petclinic-microservices/docker/Dockerfile
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VETS_SERVICE }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VETS_SERVICE }}:1.0.0
+          tags: ${{ steps.meta-vets.outputs.tags }}
           build-args: ARTIFACT_NAME=${{ env.VETS_SERVICE }}
       - name: Extract metadata (tags, labels) for visits-service
         id: meta-visits
@@ -99,6 +100,9 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VISITS_SERVICE }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push visits-service image
         id: push-visits
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -106,9 +110,7 @@ jobs:
           context: spring-petclinic-microservices/
           file: spring-petclinic-microservices/docker/Dockerfile
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VISITS_SERVICE }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.VISITS_SERVICE }}:1.0.0
+          tags: ${{ steps.meta-visits.outputs.tags }}
           build-args: ARTIFACT_NAME=${{ env.VISITS_SERVICE }}
       - name: Extract metadata (tags, labels) for api-gateway
         id: meta-api
@@ -116,6 +118,9 @@ jobs:
         with:
           images: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.API_GATEWAY }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ env.TAG_VERSION }}
       - name: Build and push api-gateway image
         id: push-api
         uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
@@ -123,9 +128,7 @@ jobs:
           context: spring-petclinic-microservices/
           file: spring-petclinic-microservices/docker/Dockerfile
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.API_GATEWAY }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_INFIX }}/${{ env.API_GATEWAY }}:1.0.0
+          tags: ${{ steps.meta-api.outputs.tags }}
           build-args: |
             ARTIFACT_NAME=${{ env.API_GATEWAY }}    
             EXPOSED_PORT=8080
