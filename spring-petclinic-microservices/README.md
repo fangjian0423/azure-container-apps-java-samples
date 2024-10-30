@@ -13,7 +13,7 @@ In [Azure Container Apps Java Microservice quickstart](https://learn.microsoft.c
 
 3. Modify the code in your forked repository and push to your forked repository.
 
-4. Go to your forked `azure-container-apps-java-samples` repository, navigate to the `GitHub Actions` tab, choose `Publish Petclinic images` workflow, and click `Run workflow`, then fill in the repository url of Spring Pet clinic microservices with your forked Petclinic repository url.
+4. Go to your forked `azure-container-apps-java-samples` repository, navigate to the `GitHub Actions` tab, choose `Publish Petclinic images` workflow, and click `Run workflow`, then fill in the repository url of Spring Pet clinic microservices with your forked Petclinic repository url. The image tag version is optional for your customized images, you can leave it empty to use the default value `latest`.
 
    :::image type="content" source="resources/build-your-own-images.png" alt-text="Screenshot of build customized images.":::
 
