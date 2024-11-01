@@ -7,7 +7,11 @@ This is the companion repository for the [Azure Container Apps Java quickstart](
 
 Follow the steps to run the Spring PetClinic sample application in Azure Container Apps.
 
-1. Fork this repository to your GitHub account.
+1. Clone this repository.
+
+    ```
+    git clone https://github.com/Azure-Samples/azure-container-apps-java-samples.git && cd azure-container-apps-java-samples/spring-petclinic/spring-petclinic
+    ```
 2. Sign in to Azure from the CLI and choose your subscription.
     ```
     az login
@@ -26,20 +30,25 @@ Follow the steps to run the Spring PetClinic sample application in Azure Contain
     az provider register --namespace Microsoft.OperationalInsights
     ```
    
-5. Build and deploy your first container app from your forked GitHub repository with the `containerapp up` command.
+5. Set up the `spring-petclinic` submodule.
+    ```
+    git submodule update --init --recursive
+    ```
+   
+6. Build and deploy your first container app from your forked GitHub repository with the `containerapp up` command.
     ```
      az containerapp up \
          --name <your-container-app-name> \
          --resource-group <your-resource-group-name> \
          --location <your-location> \
          --environment <your-container-app-environment-name> \
-         --context-path spring-petclinic \
-         --repo <YOUR_GITHUB_REPOSITORY_NAME>
+         --source .
     ```
    This command will:
    - Create the resource group
    - Create the Container Apps environment with a Log Analytics workspace
    - Create an Azure Container Registry
-   - Create a GitHub Action workflow to build and deploy the container app
+   - Build the container image and push it to the registry
+   - Create and deploy the container app using the built container image
 
-6. Copy the domain name returned by the containerapp up to a web browser. You will see your Petclinic app.
+6. Copy the FQDN to a web browser. You will see your Petclinic app.
